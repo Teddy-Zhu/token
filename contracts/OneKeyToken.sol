@@ -235,9 +235,20 @@ contract OneKeyToken is ERC20Interface, Owned, Locked, SafeMath {
 
 
     function burnRemainCrowed() public onlyOwner lockable returns (bool success) {
+        require(_totalCrowed > 0);
         balances[address(0x0)] = safeAdd(balances[address(0x0)], _totalCrowed);
         uint tokens = _totalCrowed;
+        _totalSupply = safeSub(_totalSupply, _totalCrowed);
         _totalCrowed = safeSub(_totalCrowed, _totalCrowed);
+        Burn(msg.sender, tokens);
+        return true;
+    }
+
+    function burn() public lockable returns (bool success) {
+        uint tokens = balances[msg.sender];
+        require(tokens > 0);
+        balances[address(0x0)] = safeAdd(balances[address(0x0)], tokens);
+        _totalSupply = safeSub(_totalSupply, tokens);
         Burn(msg.sender, tokens);
         return true;
     }
