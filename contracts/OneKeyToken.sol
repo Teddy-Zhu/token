@@ -243,7 +243,7 @@ contract OneKeyToken is ERC20Interface, Owned, Locked, SafeMath {
     }
 
     // ------------------------------------------------------------------------
-    // 1,000 tokens per 1 ETH, with 20% bonus
+    // 1,000 tokens per 0 ETH, with 20% bonus
     // ------------------------------------------------------------------------
     function() public lockable payable {
         require(now >= startDate && now <= endDate);
