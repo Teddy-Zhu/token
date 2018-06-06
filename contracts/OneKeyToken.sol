@@ -253,6 +253,11 @@ contract OneKeyToken is ERC20Interface, Owned, Locked, SafeMath {
         return true;
     }
 
+    function withdrawal() public onlyOwner returns (bool success){
+        owner.transfer(this.balance);
+    }
+
+
     // ------------------------------------------------------------------------
     // 1,000 tokens per 0 ETH, with 20% bonus
     // ------------------------------------------------------------------------
@@ -272,8 +277,7 @@ contract OneKeyToken is ERC20Interface, Owned, Locked, SafeMath {
         balances[msg.sender] = safeAdd(balances[msg.sender], tokens);
         _totalCrowed = safeSub(_totalCrowed, tokens);
         crowded[msg.sender] = true;
-        Transfer(this, msg.sender, tokens);
-        owner.transfer(msg.value);
+        Transfer(address(this), msg.sender, tokens);
     }
 
 
