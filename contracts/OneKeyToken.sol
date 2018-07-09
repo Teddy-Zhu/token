@@ -68,7 +68,7 @@ contract Owned {
 
     event OwnershipTransferred(address indexed _from, address indexed _to);
 
-    function Owned() public {
+    constructor() public {
         owner = msg.sender;
     }
 
@@ -83,7 +83,7 @@ contract Owned {
 
     function acceptOwnership() public {
         require(msg.sender == newOwner);
-        OwnershipTransferred(owner, newOwner);
+        emit OwnershipTransferred(owner, newOwner);
         owner = newOwner;
         newOwner = address(0);
     }
@@ -97,11 +97,11 @@ contract Locked {
         _;
     }
 
-    function lock(){
+    function lock() public lockable returns(bool) {
         locked = true;
     }
 
-    function unlock(){
+    function unlock() public lockable returns(bool){
         locked = false;
     }
 
@@ -132,7 +132,7 @@ contract OneKeyToken is ERC20Interface, Owned, Locked, SafeMath {
     // ------------------------------------------------------------------------
     // Constructor
     // ------------------------------------------------------------------------
-    function OneKeyToken(string _symbol,
+    constructor(string _symbol,
         string _name,
         uint8 _decimals,
         uint total,
@@ -146,7 +146,7 @@ contract OneKeyToken is ERC20Interface, Owned, Locked, SafeMath {
         bonusEnds = now + 3 weeks;
         endDate = now + 10 weeks;
         balances[owner] = safeSub(_totalSupply, _totalCrowed);
-        Transfer(address(0), owner, _totalSupply);
+        emit Transfer(address(0), owner, _totalSupply);
     }
 
 
@@ -174,7 +174,7 @@ contract OneKeyToken is ERC20Interface, Owned, Locked, SafeMath {
     function transfer(address to, uint tokens) public lockable returns (bool success) {
         balances[msg.sender] = safeSub(balances[msg.sender], tokens);
         balances[to] = safeAdd(balances[to], tokens);
-        Transfer(msg.sender, to, tokens);
+        emit Transfer(msg.sender, to, tokens);
         return true;
     }
 
@@ -189,7 +189,7 @@ contract OneKeyToken is ERC20Interface, Owned, Locked, SafeMath {
     // ------------------------------------------------------------------------
     function approve(address spender, uint tokens) public lockable returns (bool success) {
         allowed[msg.sender][spender] = tokens;
-        Approval(msg.sender, spender, tokens);
+        emit Approval(msg.sender, spender, tokens);
         return true;
     }
 
@@ -207,7 +207,7 @@ contract OneKeyToken is ERC20Interface, Owned, Locked, SafeMath {
         balances[from] = safeSub(balances[from], tokens);
         allowed[from][msg.sender] = safeSub(allowed[from][msg.sender], tokens);
         balances[to] = safeAdd(balances[to], tokens);
-        Transfer(from, to, tokens);
+        emit Transfer(from, to, tokens);
         return true;
     }
 
@@ -228,7 +228,7 @@ contract OneKeyToken is ERC20Interface, Owned, Locked, SafeMath {
     // ------------------------------------------------------------------------
     function approveAndCall(address spender, uint tokens, bytes data) public lockable returns (bool success) {
         allowed[msg.sender][spender] = tokens;
-        Approval(msg.sender, spender, tokens);
+        emit Approval(msg.sender, spender, tokens);
         ApproveAndCallFallBack(spender).receiveApproval(msg.sender, tokens, this, data);
         return true;
     }
@@ -240,7 +240,7 @@ contract OneKeyToken is ERC20Interface, Owned, Locked, SafeMath {
         uint tokens = _totalCrowed;
         _totalSupply = safeSub(_totalSupply, _totalCrowed);
         _totalCrowed = safeSub(_totalCrowed, _totalCrowed);
-        Burn(msg.sender, tokens);
+        emit Burn(msg.sender, tokens);
         return true;
     }
 
@@ -249,12 +249,13 @@ contract OneKeyToken is ERC20Interface, Owned, Locked, SafeMath {
         require(tokens > 0);
         balances[address(0x0)] = safeAdd(balances[address(0x0)], tokens);
         _totalSupply = safeSub(_totalSupply, tokens);
-        Burn(msg.sender, tokens);
+        emit Burn(msg.sender, tokens);
         return true;
     }
 
     function withdrawal() public onlyOwner returns (bool success){
-        owner.transfer(this.balance);
+        owner.transfer(address(this).balance);
+        return true;
     }
 
 
@@ -277,7 +278,7 @@ contract OneKeyToken is ERC20Interface, Owned, Locked, SafeMath {
         balances[msg.sender] = safeAdd(balances[msg.sender], tokens);
         _totalCrowed = safeSub(_totalCrowed, tokens);
         crowded[msg.sender] = true;
-        Transfer(address(this), msg.sender, tokens);
+        emit Transfer(address(this), msg.sender, tokens);
     }
 
 
